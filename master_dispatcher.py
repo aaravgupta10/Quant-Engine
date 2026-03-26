@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import smtplib
 from email.mime.text import MIMEText
@@ -18,13 +19,13 @@ RECEIVER_EMAIL = os.getenv("RECEIVER_EMAIL")
 def execute_engine(script_name):
     print(f"Triggering {script_name}...")
     try:
-        result = subprocess.run(["python", script_name], capture_output=True, text=True, check=True)
+        # sys.executable FORCES the child process to stay inside the active venv
+        result = subprocess.run([sys.executable, script_name], capture_output=True, text=True, check=True)
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"CRITICAL FAILURE IN {script_name}:\n{e.stderr}"
 
 def compile_and_send_brief():
-    # Failsafe check to ensure the .env loaded correctly
     if not SENDER_EMAIL or not APP_PASSWORD:
         print("[ERROR] Credentials missing. Check your .env file.")
         return
