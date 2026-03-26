@@ -2,28 +2,43 @@ import os
 import sys
 import subprocess
 import smtplib
+import re
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Load the hidden variables from the .env file
 load_dotenv()
 
-# --- CONFIGURATION (SECURED) ---
 SENDER_EMAIL = os.getenv("SENDER_EMAIL")
 APP_PASSWORD = os.getenv("APP_PASSWORD")
 RECEIVER_EMAIL = os.getenv("RECEIVER_EMAIL")
-# -------------------------------
 
 def execute_engine(script_name):
     print(f"Triggering {script_name}...")
     try:
-        # sys.executable FORCES the child process to stay inside the active venv
         result = subprocess.run([sys.executable, script_name], capture_output=True, text=True, check=True)
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"CRITICAL FAILURE IN {script_name}:\n{e.stderr}"
+
+def parse_to_html(raw_text):
+    """Converts terminal markdown and sentiment into styled HTML components."""
+    # 1. Replace the ugly ======== dividers with sleek corporate section headers
+    clean = re.sub(r'={5,}\s*(.*?)\s*={5,}', r'<div class="section-divider">\1</div>', raw_text)
+    
+    # 2. Convert Markdown bold (**text**) to HTML bold with dark color
+    clean = re.sub(r'\*\*(.*?)\*\*', r'<span class="highlight">\1</span>', clean)
+    
+    # 3. Convert Markdown bullets (* text) into actual HTML list items with custom blue bullets
+    clean = re.sub(r'^\s*\*\s+(.*)', r'<div class="custom-bullet">\1</div>', clean, flags=re.MULTILINE)
+    
+    # 4. Colorize Quant Sentiment (Green/Red/Gray tags)
+    clean = clean.replace('NET ACCUMULATION (BULLISH)', '<span class="bullish">NET ACCUMULATION (BULLISH)</span>')
+    clean = clean.replace('NET DISTRIBUTION (BEARISH)', '<span class="bearish">NET DISTRIBUTION (BEARISH)</span>')
+    clean = clean.replace('NET NEUTRAL (MARKET MAKING)', '<span class="neutral">NET NEUTRAL (MARKET MAKING)</span>')
+    
+    return clean
 
 def compile_and_send_brief():
     if not SENDER_EMAIL or not APP_PASSWORD:
@@ -33,40 +48,48 @@ def compile_and_send_brief():
     today_date = datetime.now().strftime("%B %d, %Y")
     print(f"Initiating Master Pipeline for {today_date}...\n")
     
-    macro_intel = execute_engine("rag_pipeline.py")
-    liquidity_flow = execute_engine("nse_flow_tracker.py")
-    portfolio_risk = execute_engine("risk_hedger.py")
+    # Run the engines
+    raw_macro = execute_engine("rag_pipeline.py")
+    raw_liquidity = execute_engine("nse_flow_tracker.py")
+    raw_risk = execute_engine("risk_hedger.py")
     
-    print("\nAll engines executed. Compiling Executive HTML Report...")
+    print("\nAll engines executed. Parsing Markdown to HTML...")
 
-    # 2. Build the HTML Email (Clean, Institutional Corporate Aesthetic)
+    # Pass the raw text through our new Regex formatting engine
+    macro_intel = parse_to_html(raw_macro)
+    liquidity_flow = parse_to_html(raw_liquidity)
+    portfolio_risk = parse_to_html(raw_risk)
+
     html_content = f"""
     <html>
         <head>
             <style>
-                body {{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f5f7; color: #111827; padding: 20px; line-height: 1.6; }}
-                .container {{ background-color: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 850px; margin: auto; border: 1px solid #e5e7eb; }}
-                h2 {{ color: #0f172a; border-bottom: 3px solid #2563eb; padding-bottom: 12px; font-size: 26px; margin-bottom: 30px; letter-spacing: -0.5px; }}
-                h3 {{ color: #1e40af; margin-top: 35px; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }}
-                .content-block {{ 
-                    background-color: #f8fafc; 
-                    color: #334155; 
-                    padding: 20px 25px; 
-                    border-radius: 8px; 
-                    border-left: 4px solid #3b82f6; 
-                    font-family: 'Segoe UI', system-ui, sans-serif; 
-                    font-size: 14px; 
-                    white-space: pre-wrap; 
-                    margin-top: 15px;
-                    line-height: 1.7;
-                }}
-                .footer {{ margin-top: 45px; font-size: 12px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px; }}
-                .highlight {{ font-weight: bold; color: #0f172a; }}
+                body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155; padding: 20px; }}
+                .container {{ background-color: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); max-width: 800px; margin: auto; border: 1px solid #e2e8f0; }}
+                
+                h2 {{ color: #0f172a; border-bottom: 2px solid #2563eb; padding-bottom: 15px; font-size: 24px; margin-bottom: 30px; font-weight: 800; letter-spacing: -0.5px; }}
+                h3 {{ color: #1e3a8a; margin-top: 40px; font-size: 15px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; display: flex; align-items: center; }}
+                
+                /* The main text containers */
+                .content-block {{ background-color: #ffffff; color: #475569; padding: 5px 15px 15px 15px; border-radius: 8px; font-size: 14px; white-space: pre-wrap; line-height: 1.6; }}
+                
+                /* Parsed Elements Styling */
+                .section-divider {{ font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin: 25px 0 10px 0; border-bottom: 1px dashed #e2e8f0; padding-bottom: 5px; }}
+                .highlight {{ color: #0f172a; font-weight: 700; }}
+                .custom-bullet {{ margin-left: 15px; margin-bottom: 6px; position: relative; display: block; }}
+                .custom-bullet::before {{ content: "■"; color: #3b82f6; font-size: 10px; position: absolute; left: -15px; top: 3px; }}
+                
+                /* Quant Sentiment Tags */
+                .bullish {{ color: #15803d; font-weight: 700; background: #dcfce7; padding: 2px 8px; border-radius: 4px; border: 1px solid #bbf7d0; font-size: 12px; }}
+                .bearish {{ color: #b91c1c; font-weight: 700; background: #fee2e2; padding: 2px 8px; border-radius: 4px; border: 1px solid #fecaca; font-size: 12px; }}
+                .neutral {{ color: #475569; font-weight: 700; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; border: 1px solid #e2e8f0; font-size: 12px; }}
+                
+                .footer {{ margin-top: 50px; font-size: 12px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px; }}
             </style>
         </head>
         <body>
             <div class="container">
-                <h2>Quantitative Executive Brief <span style="color: #64748b; font-size: 18px; font-weight: normal;">| {today_date}</span></h2>
+                <h2>Quantitative Executive Brief <span style="color: #94a3b8; font-weight: 400; font-size: 18px;">| {today_date}</span></h2>
                 
                 <h3>1. Global Macro & Systemic Risk</h3>
                 <div class="content-block">{macro_intel}</div>
@@ -74,12 +97,12 @@ def compile_and_send_brief():
                 <h3>2. Market Liquidity & Institutional Flow</h3>
                 <div class="content-block">{liquidity_flow}</div>
                 
-                <h3>3. Localized Portfolio Risk Assessment</h3>
+                <h3>3. Local Portfolio Risk Assessment</h3>
                 <div class="content-block">{portfolio_risk}</div>
                 
                 <div class="footer">
-                    Automated Quantitative Architecture • Localized LLM Inference<br>
-                    Data extracted from NSE India and DDGS Syndication.
+                    <strong>Autonomous Quantitative Architecture</strong><br>
+                    Localized LLM Inference • NSE FII/DII Data Streams
                 </div>
             </div>
         </body>
@@ -93,7 +116,6 @@ def compile_and_send_brief():
     msg.attach(MIMEText(html_content, 'html'))
 
     try:
-        print("Authenticating with Google SMTP server...")
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(SENDER_EMAIL, APP_PASSWORD)
