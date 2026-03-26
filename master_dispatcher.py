@@ -39,33 +39,46 @@ def compile_and_send_brief():
     
     print("\nAll engines executed. Compiling Executive HTML Report...")
 
+    # 2. Build the HTML Email (Clean, Institutional Corporate Aesthetic)
     html_content = f"""
     <html>
         <head>
             <style>
-                body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f9; color: #333; padding: 20px; }}
-                .container {{ background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }}
-                h2 {{ color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }}
-                h3 {{ color: #34495e; margin-top: 25px; }}
-                pre {{ background-color: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 5px; overflow-x: auto; font-family: 'Consolas', monospace; font-size: 13px; line-height: 1.4; }}
-                .footer {{ margin-top: 30px; font-size: 12px; color: #7f8c8d; text-align: center; }}
+                body {{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f4f5f7; color: #111827; padding: 20px; line-height: 1.6; }}
+                .container {{ background-color: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 850px; margin: auto; border: 1px solid #e5e7eb; }}
+                h2 {{ color: #0f172a; border-bottom: 3px solid #2563eb; padding-bottom: 12px; font-size: 26px; margin-bottom: 30px; letter-spacing: -0.5px; }}
+                h3 {{ color: #1e40af; margin-top: 35px; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }}
+                .content-block {{ 
+                    background-color: #f8fafc; 
+                    color: #334155; 
+                    padding: 20px 25px; 
+                    border-radius: 8px; 
+                    border-left: 4px solid #3b82f6; 
+                    font-family: 'Segoe UI', system-ui, sans-serif; 
+                    font-size: 14px; 
+                    white-space: pre-wrap; 
+                    margin-top: 15px;
+                    line-height: 1.7;
+                }}
+                .footer {{ margin-top: 45px; font-size: 12px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px; }}
+                .highlight {{ font-weight: bold; color: #0f172a; }}
             </style>
         </head>
         <body>
             <div class="container">
-                <h2>Quantitative Executive Brief - {today_date}</h2>
+                <h2>Quantitative Executive Brief <span style="color: #64748b; font-size: 18px; font-weight: normal;">| {today_date}</span></h2>
                 
-                <h3>1. Global Macro & Systemic Risk (RAG Vault)</h3>
-                <pre>{macro_intel}</pre>
+                <h3>1. Global Macro & Systemic Risk</h3>
+                <div class="content-block">{macro_intel}</div>
                 
-                <h3>2. Market Liquidity & FII/DII Flow</h3>
-                <pre>{liquidity_flow}</pre>
+                <h3>2. Market Liquidity & Institutional Flow</h3>
+                <div class="content-block">{liquidity_flow}</div>
                 
-                <h3>3. Localized Portfolio Risk & Hedging</h3>
-                <pre>{portfolio_risk}</pre>
+                <h3>3. Localized Portfolio Risk Assessment</h3>
+                <div class="content-block">{portfolio_risk}</div>
                 
                 <div class="footer">
-                    Generated automatically by the Local Llama Quant Architecture.<br>
+                    Automated Quantitative Architecture • Localized LLM Inference<br>
                     Data extracted from NSE India and DDGS Syndication.
                 </div>
             </div>
