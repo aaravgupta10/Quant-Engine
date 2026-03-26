@@ -17,7 +17,15 @@ RECEIVER_EMAIL = os.getenv("RECEIVER_EMAIL")
 def execute_engine(script_name):
     print(f"Triggering {script_name}...")
     try:
-        result = subprocess.run([sys.executable, script_name], capture_output=True, text=True, check=True)
+        # We force UTF-8 encoding so the Rupee symbol (₹) and other special characters don't crash Windows
+        result = subprocess.run(
+            [sys.executable, script_name], 
+            capture_output=True, 
+            text=True, 
+            encoding="utf-8", 
+            errors="replace", 
+            check=True
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"CRITICAL FAILURE IN {script_name}:\n{e.stderr}"
