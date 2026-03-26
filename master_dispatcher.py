@@ -59,7 +59,7 @@ def compile_and_send_brief():
     # Run the engines
     raw_macro = execute_engine("rag_pipeline.py")
     raw_liquidity = execute_engine("nse_flow_tracker.py")
-    raw_risk = execute_engine("risk_hedger.py")
+    raw_risk = execute_engine("macro_indicators.py")
     
     print("\nAll engines executed. Parsing Markdown to HTML...")
 
@@ -105,7 +105,7 @@ def compile_and_send_brief():
                 <h3>2. Market Liquidity & Institutional Flow</h3>
                 <div class="content-block">{liquidity_flow}</div>
                 
-                <h3>3. Local Portfolio Risk Assessment</h3>
+                <h3>3. Leading Indicators & Global Correlation</h3>
                 <div class="content-block">{portfolio_risk}</div>
                 
                 <div class="footer">

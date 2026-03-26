@@ -1,6 +1,6 @@
 import chromadb
 import ollama
-from duckduckgo_search import DDGS
+from ddgs import DDGS
 
 def run_rag_pipeline():
     print("1. Initializing the Daily Memory Vault...")
@@ -33,32 +33,30 @@ def run_rag_pipeline():
 
     print("4. Vault loaded. Formulating query for the Chief Strategist...\n")
     
-    # The Question you want to ask your portfolio manager
-    question = "What are the biggest immediate risks to the Indian economy mentioned in today's reports?"
+    # The new focus for the macro blog
+    question = "Synthesize the top 3 macroeconomic headlines from today and analyze their impact on the Indian economy."
     print(f"USER QUERY: {question}\n")
 
     # STEP A: Convert the question to math
     q_emb = ollama.embeddings(model="nomic-embed-text", prompt=question)["embedding"]
     
-    # STEP B: Retrieve only the top 2 most mathematically relevant reports from the vault
-    results = collection.query(query_embeddings=[q_emb], n_results=2)
+    # STEP B: Retrieve the top 3 most relevant reports from the vault
+    results = collection.query(query_embeddings=[q_emb], n_results=3)
     retrieved_context = "\n\n".join(results['documents'][0])
 
-    # STEP C: Feed the retrieved data and the strict rules to Llama 3.1
-    system_prompt = f"""
-    You are a ruthless institutional macro strategist for an Indian Equities Portfolio.
-    Answer the user's question using ONLY the provided intelligence context below. 
-    If the answer is not in the context, output exactly: "Insufficient data to form a thesis."
-    Do not hallucinate or use outside knowledge. Format with bullet points for specific risks.
-    
-    VAULT CONTEXT:
-    {retrieved_context}
-    """
+    # STEP C: Feed the retrieved data and the strict new analyst rules to Llama 3.1
+    system_prompt = """You are a Senior Macroeconomic Equity Analyst at a Tier-1 quantitative fund. 
+Your job is to read the provided live intelligence and write a highly detailed, professional blog-style brief (minimum 400 words). 
+Focus strictly on synthesizing the top 3 leading macroeconomic indicators or systemic themes found in the data. 
+Do not give me a list of bullet points. Write cohesive, analytical paragraphs. Break down exactly how these specific themes will impact the broader Indian equity markets, corporate operating leverage, and systemic risk over the next quarter. 
+Use a sophisticated, institutional tone."""
+
+    user_prompt = f"Analyze this live intelligence and write the 400+ word Macro Equity Analyst Blog:\n\nVAULT CONTEXT:\n{retrieved_context}"
 
     print("5. Synthesizing Final Forecast...\n")
     response = ollama.chat(model='llama3.1', messages=[
         {'role': 'system', 'content': system_prompt},
-        {'role': 'user', 'content': question}
+        {'role': 'user', 'content': user_prompt}
     ])
 
     print("================ CHIEF STRATEGIST OUTPUT ================\n")
