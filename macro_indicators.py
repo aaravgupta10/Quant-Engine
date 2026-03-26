@@ -1,3 +1,5 @@
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 import yfinance as yf
 import ollama
 import time

@@ -1,12 +1,15 @@
+import sys
 import chromadb
 import ollama
 from ddgs import DDGS
+
+# THE SILVER BULLET: Force Windows to output pure UTF-8 so symbols (₹, →) never crash the terminal
+sys.stdout.reconfigure(encoding='utf-8')
 
 def run_rag_pipeline():
     print("1. Initializing the Daily Memory Vault...")
     client = chromadb.PersistentClient(path="./db_storage")
     
-    # We create a fresh collection for today's data (deleting the old one if it exists to avoid clutter)
     try:
         client.delete_collection("daily_macro")
     except:
@@ -17,10 +20,9 @@ def run_rag_pipeline():
     live_data = []
     try:
         with DDGS() as ddgs:
-            # Pulling 5 live macro reports
-            results = list(ddgs.news(keywords="Reserve Bank of India economy", region="in-en", max_results=5))
+            # FIXED API CALL: Removed "keywords=" as DDGS changed their positional arguments
+            results = list(ddgs.news("Reserve Bank of India economy", region="in-en", max_results=5))
             for r in results:
-                # Combining title and body into one solid intelligence block
                 live_data.append(r['title'] + " - " + r['body'])
     except Exception as e:
         print("Failed to gather data:", e)
@@ -33,25 +35,24 @@ def run_rag_pipeline():
 
     print("4. Vault loaded. Formulating query for the Chief Strategist...\n")
     
-    # The new focus for the macro blog
     question = "Synthesize the top 3 macroeconomic headlines from today and analyze their impact on the Indian economy."
     print(f"USER QUERY: {question}\n")
 
-    # STEP A: Convert the question to math
     q_emb = ollama.embeddings(model="nomic-embed-text", prompt=question)["embedding"]
-    
-    # STEP B: Retrieve the top 3 most relevant reports from the vault
     results = collection.query(query_embeddings=[q_emb], n_results=3)
     retrieved_context = "\n\n".join(results['documents'][0])
 
-    # STEP C: Feed the retrieved data and the strict new analyst rules to Llama 3.1
-    system_prompt = """You are a Senior Macroeconomic Equity Analyst at a Tier-1 quantitative fund. 
-Your job is to read the provided live intelligence and write a highly detailed, professional blog-style brief (minimum 400 words). 
-Focus strictly on synthesizing the top 3 leading macroeconomic indicators or systemic themes found in the data. 
-Do not give me a list of bullet points. Write cohesive, analytical paragraphs. Break down exactly how these specific themes will impact the broader Indian equity markets, corporate operating leverage, and systemic risk over the next quarter. 
-Use a sophisticated, institutional tone."""
+    # THE FINSHOTS PROMPT OVERRIDE
+    system_prompt = """You are a top-tier macroeconomic journalist writing for Finshots. 
+Your job is to read the provided live intelligence and write a highly engaging, continuous, long-form article (MINIMUM 400 WORDS). 
+Focus on synthesizing the top 3 macroeconomic headlines and explaining exactly how they impact the Indian economy, inflation, and retail investors.
+CRITICAL RULES:
+- ABSOLUTELY NO BULLET POINTS.
+- ABSOLUTELY NO LISTS.
+- DO NOT USE ASTERISKS.
+- Write in flowing, cohesive paragraphs. Tell a story with the data."""
 
-    user_prompt = f"Analyze this live intelligence and write the 400+ word Macro Equity Analyst Blog:\n\nVAULT CONTEXT:\n{retrieved_context}"
+    user_prompt = f"Write the 400+ word Finshots-style Macro Article based on this data:\n\nVAULT CONTEXT:\n{retrieved_context}"
 
     print("5. Synthesizing Final Forecast...\n")
     response = ollama.chat(model='llama3.1', messages=[
