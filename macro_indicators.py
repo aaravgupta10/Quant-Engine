@@ -32,7 +32,7 @@ def fetch_macro_data():
     
     system_prompt = """You are a Chief Economist. You are provided with real-time data for leading global macroeconomic indicators.
     Write a sharp, ruthless analysis of how these specific numbers (Yields, Oil, Currency) are currently interacting and what they signal for the Indian economy today.
-    Discuss potential impacts on imported inflation, foreign capital flow, and currency defense strategies. 
+    Discuss potential impacts on imported inflation, foreign capital flow (Note: An increase in US treasury yields causes capital INFLOWS to the US and OUTFLOWS from emerging markets like India), and currency defense strategies. 
     Keep it strictly professional. No fluff. Just pure macro correlation."""
     
     user_prompt = f"LIVE MACRO DATA:\n{live_data}\n\nProvide the systemic correlation analysis based ONLY on these numbers."
