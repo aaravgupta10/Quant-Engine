@@ -72,6 +72,50 @@ def run_technical_analysis():
     except:
         vix_val = "N/A"
 
+    # --- 2.5 HIGH YIELD CREDIT SPREAD PROXY ---
+    try:
+        # We use IEF (Treasury) / HYG (High Yield) as a proxy for credit spread stress
+        # When stress is high, High Yield crashes and Treasuries rally, sending this ratio UP.
+        hyg_data = yf.Ticker("HYG").history(period="6mo")['Close']
+        ief_data = yf.Ticker("IEF").history(period="6mo")['Close']
+        if not hyg_data.empty and not ief_data.empty:
+            spread_proxy = ief_data / hyg_data
+            latest_spread = spread_proxy.iloc[-1]
+            plt.figure(figsize=(7, 4))
+            plt.plot(spread_proxy.index, spread_proxy, color='#8b5cf6', linewidth=1.5)
+            plt.title('High Yield Credit Stress Proxy (IEF/HYG, 6-Month)', fontsize=12, fontweight='bold', color='#0f172a')
+            plt.ylabel('Stress Ratio', fontsize=10, color='#334155')
+            plt.grid(True, linestyle='--', alpha=0.5)
+            plt.gca().set_facecolor('#f8fafc')
+            plt.gcf().autofmt_xdate()
+            plt.tight_layout()
+            plt.savefig('hyg_spread.png', dpi=150, bbox_inches='tight')
+            plt.close()
+        else:
+            latest_spread = "N/A"
+    except:
+        latest_spread = "N/A"
+
+    # --- 2.8 INTERBANK RATE (Risk-Free Proxy) ---
+    try:
+        irx_data = yf.Ticker("^IRX").history(period="6mo")
+        if not irx_data.empty:
+            irx_val = irx_data['Close'].iloc[-1]
+            plt.figure(figsize=(7, 4))
+            plt.plot(irx_data.index, irx_data['Close'], color='#0284c7', linewidth=1.5)
+            plt.title('Interbank/Risk-Free Rate (^IRX, 6-Month)', fontsize=12, fontweight='bold', color='#0f172a')
+            plt.ylabel('Yield (%)', fontsize=10, color='#334155')
+            plt.grid(True, linestyle='--', alpha=0.5)
+            plt.gca().set_facecolor('#f8fafc')
+            plt.gcf().autofmt_xdate()
+            plt.tight_layout()
+            plt.savefig('interbank_rate.png', dpi=150, bbox_inches='tight')
+            plt.close()
+        else:
+            irx_val = "N/A"
+    except:
+        irx_val = "N/A"
+
     # --- 3. TECHNICAL ANCHORS (Nifty 50) ---
     try:
         nifty = yf.Ticker("^NSEI").history(period="200d")
@@ -87,19 +131,23 @@ def run_technical_analysis():
     LIVE TECHNICAL DATA:
     1. US Yield Curve: 3-Month={yields.get('3-Month'):.2f}%, 5-Year={yields.get('5-Year'):.2f}%, 10-Year={yields.get('10-Year'):.2f}%, 30-Year={yields.get('30-Year'):.2f}%
     2. Recession Gauge: 10Y-3M Spread={spread:.2f}%, Implied Probability={recession_prob:.1f}%
-    3. India VIX (Fear Gauge): {vix_val:.2f}
+    3. India VIX (Fear Gauge): {vix_val if isinstance(vix_val, str) else f"{vix_val:.2f}"}
     4. Nifty 50 Anchors: Current Price={current_price:.2f}, 50-Day SMA={sma_50:.2f}, 200-Day SMA={sma_200:.2f}
+    5. High Yield Credit Stress Proxy (IEF/HYG Ratio): {latest_spread if isinstance(latest_spread, str) else f"{latest_spread:.4f}"}
+    6. Interbank/Risk-Free Rate (^IRX): {irx_val if isinstance(irx_val, str) else f"{irx_val:.2f}%"}
     """
 
     system_prompt = """You are a ruthless Quantitative Technical Analyst.
-    Analyze the provided technical data. Write exactly four short, highly analytical paragraphs:
+    Analyze the provided technical data. Write exactly six short, highly analytical paragraphs:
     Paragraph 1: Assess the shape of the US Yield Curve (Is it inverted? Normal? What does it signal for global liquidity?).
     Paragraph 2: Assess the Recession Probability gauge based on the 10Y-3M spread.
     Paragraph 3: Assess the India VIX (Is fear high or low? Are markets complacent or panicked?).
     Paragraph 4: Assess the Nifty 50 against its 50-Day and 200-Day Moving Averages (Is it overextended, breaking down, or in a secular bull trend?).
+    Paragraph 5: Assess the High Yield Credit Stress Proxy (Are credit spreads widening, signaling stress, or tightening, signaling risk-on?).
+    Paragraph 6: Assess the Interbank/Risk-Free Rate (Is the short-term rate elevated? What does this mean for borrowing costs and liquidity?).
     CRITICAL: NO BULLET POINTS. NO LISTS. NO ASTERISKS. Write flowing, professional paragraphs."""
 
-    user_prompt = f"{prompt_data}\n\nProvide the 4-paragraph technical insight."
+    user_prompt = f"{prompt_data}\n\nProvide the 6-paragraph technical insight."
 
     response = ollama.chat(model='llama3.1', messages=[
         {'role': 'system', 'content': system_prompt},
@@ -107,7 +155,28 @@ def run_technical_analysis():
     ])
 
     print("================ TECHNICAL ANCHOR OUTPUT ================\n")
-    print(response['message']['content'])
+    paras = [p.strip() for p in response['message']['content'].split('\n\n') if p.strip()]
+    
+    if len(paras) >= 6:
+        print("[IMG: yield_curve.png]")
+        print(paras[0] + "\n")
+        print("[IMG: recession_gauge.png]")
+        print(paras[1] + "\n")
+        print("[IMG: india_vix.png]")
+        print(paras[2] + "\n")
+        print(paras[3] + "\n") # Nifty 50 (no image)
+        print("[IMG: hyg_spread.png]")
+        print(paras[4] + "\n")
+        print("[IMG: interbank_rate.png]")
+        print("\n\n".join(paras[5:]) + "\n")
+    else:
+        # Fallback if the agent didn't follow paragraph count
+        print("[IMG: yield_curve.png]")
+        print("[IMG: recession_gauge.png]")
+        print("[IMG: india_vix.png]")
+        print("[IMG: hyg_spread.png]")
+        print("[IMG: interbank_rate.png]")
+        print("\n\n".join(paras))
     print("\n=========================================================")
 
 if __name__ == "__main__":

@@ -73,9 +73,18 @@ def compile_and_send_brief():
     technical_insights = parse_to_html(raw_technical)
 
     # --- PHASE 3: IMAGE ENCODING ---
-    img_tag = '<img src="cid:yield_curve_img" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">' if os.path.exists("yield_curve.png") else ''
-    recession_tag = '<img src="cid:recession_gauge_img" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">' if os.path.exists("recession_gauge.png") else ''
-    vix_tag = '<img src="cid:india_vix_img" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px;">' if os.path.exists("india_vix.png") else ''
+    img_tag = '<img src="cid:yield_curve_img" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: block; margin-top: 20px;">' if os.path.exists("yield_curve.png") else ''
+    recession_tag = '<img src="cid:recession_gauge_img" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: block; margin-top: 20px;">' if os.path.exists("recession_gauge.png") else ''
+    vix_tag = '<img src="cid:india_vix_img" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: block; margin-top: 20px;">' if os.path.exists("india_vix.png") else ''
+    hyg_tag = '<img src="cid:hyg_spread_img" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: block; margin-top: 20px;">' if os.path.exists("hyg_spread.png") else ''
+    interbank_tag = '<img src="cid:interbank_rate_img" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: block; margin-top: 20px;">' if os.path.exists("interbank_rate.png") else ''
+
+    # Injecting interleaved images
+    technical_insights = technical_insights.replace("[IMG: yield_curve.png]", img_tag)
+    technical_insights = technical_insights.replace("[IMG: recession_gauge.png]", recession_tag)
+    technical_insights = technical_insights.replace("[IMG: india_vix.png]", vix_tag)
+    technical_insights = technical_insights.replace("[IMG: hyg_spread.png]", hyg_tag)
+    technical_insights = technical_insights.replace("[IMG: interbank_rate.png]", interbank_tag)
 
     # --- PHASE 4: HTML CONSTRUCTION ---
     html_content = f"""
@@ -112,9 +121,6 @@ def compile_and_send_brief():
 
                 <h3>4. Systemic Fear & Technical Anchors</h3>
                 <div class="content-block">
-                    {img_tag}
-                    {recession_tag}
-                    {vix_tag}
                     {technical_insights}
                 </div>
                 
@@ -156,6 +162,20 @@ def compile_and_send_brief():
             img = MIMEImage(img_file.read())
             img.add_header('Content-ID', '<recession_gauge_img>')
             img.add_header('Content-Disposition', 'inline', filename='recession_gauge.png')
+            msg.attach(img)
+
+    if os.path.exists("hyg_spread.png"):
+        with open("hyg_spread.png", "rb") as img_file:
+            img = MIMEImage(img_file.read())
+            img.add_header('Content-ID', '<hyg_spread_img>')
+            img.add_header('Content-Disposition', 'inline', filename='hyg_spread.png')
+            msg.attach(img)
+
+    if os.path.exists("interbank_rate.png"):
+        with open("interbank_rate.png", "rb") as img_file:
+            img = MIMEImage(img_file.read())
+            img.add_header('Content-ID', '<interbank_rate_img>')
+            img.add_header('Content-Disposition', 'inline', filename='interbank_rate.png')
             msg.attach(img)
 
     try:
