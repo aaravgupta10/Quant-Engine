@@ -2,7 +2,12 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 import requests
 import pandas as pd
-import ollama
+import os
+from dotenv import load_dotenv
+from google import genai
+
+load_dotenv(override=True)
+client = genai.Client()
 
 def extract_and_analyze_flow():
     print("1. Harvesting NSE session cookies...")
@@ -55,13 +60,16 @@ def extract_and_analyze_flow():
         
         user_prompt = f"Today's Net Market Liquidity: {total_liquidity} Crores\n\nRaw Flow Matrix:\n{data_string}"
 
-        response = ollama.chat(model='llama3.1', messages=[
-            {'role': 'system', 'content': system_prompt},
-            {'role': 'user', 'content': user_prompt}
-        ])
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=user_prompt,
+            config=genai.types.GenerateContentConfig(
+                system_instruction=system_prompt,
+            )
+        )
 
         print("================ QUANTITATIVE LIQUIDITY ANALYSIS ================\n")
-        print(response['message']['content'])
+        print(response.text)
         print("\n=================================================================")
         
     except Exception as e:

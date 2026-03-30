@@ -1,13 +1,16 @@
-import ollama
+import os
+from dotenv import load_dotenv
+from google import genai
 
-print("Sending query to local Llama 3.1...")
+load_dotenv(override=True)
+client = genai.Client()
 
-response = ollama.chat(model='llama3.1', messages=[
-  {
-    'role': 'user',
-    'content': 'What are the top 3 sectors in the Indian stock market by market capitalization? Answer in one sentence.'
-  }
-])
+print("Sending query to Gemini 2.5 Flash...")
+
+response = client.models.generate_content(
+    model='gemini-2.5-flash',
+    contents='What are the top 3 sectors in the Indian stock market by market capitalization? Answer in one sentence.'
+)
 
 print("\nResponse from Agent:")
-print(response['message']['content'])
+print(response.text)

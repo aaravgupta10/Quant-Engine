@@ -1,8 +1,13 @@
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 import yfinance as yf
-import ollama
+import os
+from dotenv import load_dotenv
+from google import genai
 import time
+
+load_dotenv(override=True)
+client = genai.Client()
 
 def fetch_macro_data():
     print("1. Locking onto global leading macroeconomic indicators...")
@@ -37,14 +42,17 @@ def fetch_macro_data():
     
     user_prompt = f"LIVE MACRO DATA:\n{live_data}\n\nProvide the systemic correlation analysis based ONLY on these numbers."
     
-    response = ollama.chat(model='llama3.1', messages=[
-        {'role': 'system', 'content': system_prompt},
-        {'role': 'user', 'content': user_prompt}
-    ])
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=user_prompt,
+        config=genai.types.GenerateContentConfig(
+            system_instruction=system_prompt,
+        )
+    )
     
     print("================ MACRO CORRELATION ENGINE ================\n")
     print(f"**LIVE METRICS:**\n{live_data}\n")
-    print(response['message']['content'])
+    print(response.text)
     print("\n==========================================================")
 
 if __name__ == "__main__":

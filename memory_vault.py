@@ -1,11 +1,21 @@
 import chromadb
-import ollama
+import os
+from dotenv import load_dotenv
+from google import genai
+
+load_dotenv(override=True)
+client_ai = genai.Client()
 
 def test_memory_vault():
     print("1. Initializing Local Vector Database (ChromaDB)...")
     # This creates a hidden folder called 'db_storage' on your PC to save the data permanently
     client = chromadb.PersistentClient(path="./db_storage")
     
+    try:
+        client.delete_collection("institutional_research")
+    except:
+        pass
+        
     # Create a collection (think of this as a specific filing cabinet)
     collection = client.get_or_create_collection(name="institutional_research")
     
@@ -18,10 +28,10 @@ def test_memory_vault():
         "Goldman Sachs predicts the RBI will hold interest rates steady until Q4 due to persistent food inflation."
     ]
     
-    # We generate the mathematical embeddings for each document using Ollama
+    # We generate the mathematical embeddings for each document using Gemini
     for i, doc in enumerate(documents):
-        response = ollama.embeddings(model="nomic-embed-text", prompt=doc)
-        embedding = response["embedding"]
+        response = client_ai.models.embed_content(model="text-embedding-004", contents=doc)
+        embedding = response.embeddings[0].values
         
         # Store it in the database
         collection.upsert(
@@ -38,7 +48,8 @@ def test_memory_vault():
     print(f"QUESTION: {question}")
     
     # Convert the question into an embedding to search the database
-    q_embedding = ollama.embeddings(model="nomic-embed-text", prompt=question)["embedding"]
+    q_resp = client_ai.models.embed_content(model="text-embedding-004", contents=question)
+    q_embedding = q_resp.embeddings[0].values
     
     # Retrieve the top 1 most relevant result
     results = collection.query(

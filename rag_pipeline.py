@@ -1,10 +1,15 @@
 import sys
 import chromadb
-import ollama
+import os
+from dotenv import load_dotenv
+from google import genai
 from ddgs import DDGS
 
 # THE SILVER BULLET: Force Windows to output pure UTF-8 so symbols (₹, →) never crash the terminal
 sys.stdout.reconfigure(encoding='utf-8')
+
+load_dotenv(override=True)
+client_ai = genai.Client()
 
 def run_rag_pipeline():
     print("1. Initializing the Daily Memory Vault...")
@@ -28,9 +33,10 @@ def run_rag_pipeline():
         print("Failed to gather data:", e)
         return
 
-    print(f"3. Shredding {len(live_data)} reports into Nomic vectors and storing in ChromaDB...")
+    print(f"3. Shredding {len(live_data)} reports into Gemini vectors and storing in ChromaDB...")
     for i, doc in enumerate(live_data):
-        emb = ollama.embeddings(model="nomic-embed-text", prompt=doc)["embedding"]
+        response = client_ai.models.embed_content(model="text-embedding-004", contents=doc)
+        emb = response.embeddings[0].values
         collection.upsert(ids=[str(i)], embeddings=[emb], documents=[doc])
 
     print("4. Vault loaded. Formulating query for the Chief Strategist...\n")
@@ -38,7 +44,8 @@ def run_rag_pipeline():
     question = "Synthesize the top 3 macroeconomic headlines from today and analyze their impact on the Indian economy."
     print(f"USER QUERY: {question}\n")
 
-    q_emb = ollama.embeddings(model="nomic-embed-text", prompt=question)["embedding"]
+    q_resp = client_ai.models.embed_content(model="text-embedding-004", contents=question)
+    q_emb = q_resp.embeddings[0].values
     results = collection.query(query_embeddings=[q_emb], n_results=3)
     retrieved_context = "\n\n".join(results['documents'][0])
 
@@ -55,13 +62,16 @@ CRITICAL RULES:
     user_prompt = f"Write the 400+ word Finshots-style Macro Article based on this data:\n\nVAULT CONTEXT:\n{retrieved_context}"
 
     print("5. Synthesizing Final Forecast...\n")
-    response = ollama.chat(model='llama3.1', messages=[
-        {'role': 'system', 'content': system_prompt},
-        {'role': 'user', 'content': user_prompt}
-    ])
+    response = client_ai.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=user_prompt,
+        config=genai.types.GenerateContentConfig(
+            system_instruction=system_prompt,
+        )
+    )
 
     print("================ CHIEF STRATEGIST OUTPUT ================\n")
-    print(response['message']['content'])
+    print(response.text)
     print("\n=========================================================")
 
 if __name__ == "__main__":

@@ -1,7 +1,12 @@
 from curl_cffi import requests
 import pandas as pd
 import time
-import ollama
+import os
+from dotenv import load_dotenv
+from google import genai
+
+load_dotenv(override=True)
+client = genai.Client()
 
 def get_nse_session():
     print("1. Forging secure session with NSE servers...")
@@ -96,13 +101,16 @@ def execute_hedge_analysis(session):
     Keep it strictly professional.
     """
     
-    response = ollama.chat(model='llama3.1', messages=[
-        {'role': 'system', 'content': system_prompt},
-        {'role': 'user', 'content': f"Generate hedging directives based on this flow:\n{final_analysis_data}"}
-    ])
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=f"Generate hedging directives based on this flow:\n{final_analysis_data}",
+        config=genai.types.GenerateContentConfig(
+            system_instruction=system_prompt,
+        )
+    )
 
     print("================ EXECUTIVE HEDGING DIRECTIVE ================\n")
-    print(response['message']['content'])
+    print(response.text)
     print("\n=============================================================")
 
 if __name__ == "__main__":

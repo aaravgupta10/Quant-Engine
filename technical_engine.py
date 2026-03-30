@@ -1,11 +1,16 @@
 import sys
 import yfinance as yf
 import matplotlib.pyplot as plt
-import ollama
+import os
+from dotenv import load_dotenv
+from google import genai
 import math
 
 # Force UTF-8 so Windows never crashes
 sys.stdout.reconfigure(encoding='utf-8')
+
+load_dotenv(override=True)
+client = genai.Client()
 
 def run_technical_analysis():
     print("1. Scraping Yield Curve, India VIX, and Moving Averages...")
@@ -149,13 +154,16 @@ def run_technical_analysis():
 
     user_prompt = f"{prompt_data}\n\nProvide the 6-paragraph technical insight."
 
-    response = ollama.chat(model='llama3.1', messages=[
-        {'role': 'system', 'content': system_prompt},
-        {'role': 'user', 'content': user_prompt}
-    ])
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=user_prompt,
+        config=genai.types.GenerateContentConfig(
+            system_instruction=system_prompt,
+        )
+    )
 
     print("================ TECHNICAL ANCHOR OUTPUT ================\n")
-    paras = [p.strip() for p in response['message']['content'].split('\n\n') if p.strip()]
+    paras = [p.strip() for p in response.text.split('\n\n') if p.strip()]
     
     if len(paras) >= 6:
         print("[IMG: yield_curve.png]")
