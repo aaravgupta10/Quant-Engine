@@ -35,7 +35,7 @@ def run_rag_pipeline():
 
     print(f"3. Shredding {len(live_data)} reports into Gemini vectors and storing in ChromaDB...")
     for i, doc in enumerate(live_data):
-        response = client_ai.models.embed_content(model="text-embedding-004", contents=doc)
+        response = client_ai.models.embed_content(model="gemini-embedding-001", contents=doc)
         emb = response.embeddings[0].values
         collection.upsert(ids=[str(i)], embeddings=[emb], documents=[doc])
 
@@ -44,7 +44,7 @@ def run_rag_pipeline():
     question = "Synthesize the top 3 macroeconomic headlines from today and analyze their impact on the Indian economy."
     print(f"USER QUERY: {question}\n")
 
-    q_resp = client_ai.models.embed_content(model="text-embedding-004", contents=question)
+    q_resp = client_ai.models.embed_content(model="gemini-embedding-001", contents=question)
     q_emb = q_resp.embeddings[0].values
     results = collection.query(query_embeddings=[q_emb], n_results=3)
     retrieved_context = "\n\n".join(results['documents'][0])

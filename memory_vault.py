@@ -30,7 +30,7 @@ def test_memory_vault():
     
     # We generate the mathematical embeddings for each document using Gemini
     for i, doc in enumerate(documents):
-        response = client_ai.models.embed_content(model="text-embedding-004", contents=doc)
+        response = client_ai.models.embed_content(model="gemini-embedding-001", contents=doc)
         embedding = response.embeddings[0].values
         
         # Store it in the database
@@ -48,7 +48,7 @@ def test_memory_vault():
     print(f"QUESTION: {question}")
     
     # Convert the question into an embedding to search the database
-    q_resp = client_ai.models.embed_content(model="text-embedding-004", contents=question)
+    q_resp = client_ai.models.embed_content(model="gemini-embedding-001", contents=question)
     q_embedding = q_resp.embeddings[0].values
     
     # Retrieve the top 1 most relevant result
