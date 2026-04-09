@@ -61,7 +61,7 @@ def extract_and_analyze_flow():
         user_prompt = f"Today's Net Market Liquidity: {total_liquidity} Crores\n\nRaw Flow Matrix:\n{data_string}"
 
         response = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-flash-latest',
             contents=user_prompt,
             config=genai.types.GenerateContentConfig(
                 system_instruction=system_prompt,

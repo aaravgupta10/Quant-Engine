@@ -63,7 +63,7 @@ CRITICAL RULES:
 
     print("5. Synthesizing Final Forecast...\n")
     response = client_ai.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-flash-latest',
         contents=user_prompt,
         config=genai.types.GenerateContentConfig(
             system_instruction=system_prompt,

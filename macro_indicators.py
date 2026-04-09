@@ -43,7 +43,7 @@ def fetch_macro_data():
     user_prompt = f"LIVE MACRO DATA:\n{live_data}\n\nProvide the systemic correlation analysis based ONLY on these numbers."
     
     response = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-flash-latest',
         contents=user_prompt,
         config=genai.types.GenerateContentConfig(
             system_instruction=system_prompt,

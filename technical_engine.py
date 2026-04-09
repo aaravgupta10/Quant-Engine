@@ -155,7 +155,7 @@ def run_technical_analysis():
     user_prompt = f"{prompt_data}\n\nProvide the 6-paragraph technical insight."
 
     response = client.models.generate_content(
-        model='gemini-2.5-flash',
+        model='gemini-flash-latest',
         contents=user_prompt,
         config=genai.types.GenerateContentConfig(
             system_instruction=system_prompt,
