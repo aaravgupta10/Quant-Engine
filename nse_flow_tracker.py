@@ -58,19 +58,36 @@ def extract_and_analyze_flow():
         Output your analysis in a brutal, direct, and highly technical tone. Use bullet points.
         """
         
+        import time
         user_prompt = f"Today's Net Market Liquidity: {total_liquidity} Crores\n\nRaw Flow Matrix:\n{data_string}"
 
-        response = client.models.generate_content(
-            model='gemini-flash-latest',
-            contents=user_prompt,
-            config=genai.types.GenerateContentConfig(
-                system_instruction=system_prompt,
-            )
-        )
+        max_retries = 4
+        retry_delay = 5
+        response = None
+        
+        for attempt in range(max_retries):
+            try:
+                response = client.models.generate_content(
+                    model='gemini-flash-latest',
+                    contents=user_prompt,
+                    config=genai.types.GenerateContentConfig(
+                        system_instruction=system_prompt,
+                    )
+                )
+                break
+            except Exception as e:
+                # 503 errors indicate high demand on the Gemini model
+                if '503' in str(e) and attempt < max_retries - 1:
+                    print(f"Model busy (503 UNAVAILABLE), retrying in {retry_delay} seconds... (Attempt {attempt + 1}/{max_retries})")
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+                else:
+                    raise e
 
-        print("================ QUANTITATIVE LIQUIDITY ANALYSIS ================\n")
-        print(response.text)
-        print("\n=================================================================")
+        if response:
+            print("================ QUANTITATIVE LIQUIDITY ANALYSIS ================\n")
+            print(response.text)
+            print("\n=================================================================")
         
     except Exception as e:
         print(f"Pipeline failed: {e}")
