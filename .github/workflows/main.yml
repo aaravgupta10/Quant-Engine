@@ -2,8 +2,8 @@ name: Master Forecasting Engine Pipeline
 
 on:
   schedule:
-    # Runs at 02:30 UTC every day (08:00 IST)
-    - cron: '30 2 * * *'
+    # Runs at 02:17 UTC every day (07:47 IST) - random minute to avoid GH Action delays
+    - cron: '17 2 * * *'
   workflow_dispatch:
     # Allows manual trigger for debugging/testing
 
