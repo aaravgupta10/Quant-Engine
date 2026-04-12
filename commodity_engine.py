@@ -38,19 +38,46 @@ def run_commodity_analysis():
     metals_energy_data = {}
     agri_data = {}
 
-    for name, ticker in commodity_tickers.items():
-        try:
-            data = yf.Ticker(ticker).history(period="6mo")
-            if not data.empty:
-                commodity_latest[name] = data['Close'].iloc[-1]
-                if name in ["Gold", "Copper", "WTI Crude"]:
-                    # Normalize for comparative trend line (Base 100)
-                    metals_energy_data[name] = (data['Close'] / data['Close'].iloc[0]) * 100
-                elif name in ["Wheat", "Corn", "Soybeans"]:
-                    agri_data[name] = (data['Close'] / data['Close'].iloc[0]) * 100
+    try:
+        # Batch download drastically reduces YFinance rate limit issues
+        tickers_list = list(commodity_tickers.values())
+        raw_data = yf.download(tickers_list, period="6mo", progress=False)
+        close_prices = raw_data['Close'].dropna(how='all')
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        close_prices = None
+
+    if close_prices is not None and not close_prices.empty:
+        close_prices = close_prices.sort_index()
+        for name, ticker in commodity_tickers.items():
+            if ticker in close_prices.columns:
+                series = close_prices[ticker].dropna()
+                if not series.empty:
+                    latest = series.iloc[-1]
+                    
+                    # Compute Returns
+                    start_px = series.iloc[0]
+                    ret_6m = ((latest / start_px) - 1) * 100
+                    
+                    if len(series) > 21:
+                        px_1m = series.iloc[-21]
+                        ret_1m = ((latest / px_1m) - 1) * 100
+                    else:
+                        ret_1m = 0.0
+                    
+                    commodity_latest[name] = f"${latest:.2f} (1M: {ret_1m:+.1f}%, 6M: {ret_6m:+.1f}%)"
+
+                    # Charting basis
+                    if name in ["Gold", "Copper", "WTI Crude"]:
+                        metals_energy_data[name] = (series / series.iloc[0]) * 100
+                    elif name in ["Wheat", "Corn", "Soybeans"]:
+                        agri_data[name] = (series / series.iloc[0]) * 100
+                else:
+                    commodity_latest[name] = "N/A"
             else:
                 commodity_latest[name] = "N/A"
-        except:
+    else:
+        for name in commodity_tickers.keys():
             commodity_latest[name] = "N/A"
 
     # --- CHART 1: METALS & ENERGY RELATIVE PERFORMANCE ---
@@ -86,7 +113,7 @@ def run_commodity_analysis():
     print("2. Raw commodities secured. Waking up Quantitative Commodity Agent...")
 
     prompt_data = f"""
-    LIVE COMMODITY DATA (Latest Prices):
+    LIVE COMMODITY DATA (Latest Prices with 1M and 6M Returns):
     Precious Metals: Gold={commodity_latest.get('Gold')}, Silver={commodity_latest.get('Silver')}, Platinum={commodity_latest.get('Platinum')}, Palladium={commodity_latest.get('Palladium')}
     Base Metals: Copper={commodity_latest.get('Copper')}
     Energy: WTI Crude={commodity_latest.get('WTI Crude')}, Brent Crude={commodity_latest.get('Brent Crude')}, Natural Gas={commodity_latest.get('Natural Gas')}
@@ -94,13 +121,13 @@ def run_commodity_analysis():
     Agriculture (Softs): Sugar={commodity_latest.get('Sugar')}, Cotton={commodity_latest.get('Cotton')}, Coffee={commodity_latest.get('Coffee')}, Cocoa={commodity_latest.get('Cocoa')}
     """
 
-    system_prompt = """You are a ruthless Quantitative Commodity Analyst.
-    Analyze the provided commodity data across 15 key global markets. Write exactly four short, highly analytical paragraphs:
-    Paragraph 1: Assess Precious & Base Metals (Gold, Silver, Platinum, Palladium, Copper) - What does it signal for inflation, safe-haven demand, and industrial output?
-    Paragraph 2: Assess the Energy Complex (Crude types, Natural Gas) - What does the pricing indicate for global supply/demand imbalances or geopolitical risk?
-    Paragraph 3: Assess the Grains (Wheat, Corn, Soybeans) - What is the macro narrative surrounding food security, yield pressures, or weather impacts?
-    Paragraph 4: Assess the Soft Commodities (Sugar, Cotton, Coffee, Cocoa) - Synthesize specific structural deficits, climate dynamics, or cyclical spikes affecting the softs market.
-    CRITICAL: NO BULLET POINTS. NO LISTS. NO ASTERISKS. Write flowing, professional paragraphs."""
+    system_prompt = """You are a highly sophisticated, ruthless Quantitative Commodity Analyst.
+    Analyze the provided quantitative commodity data aggressively across 15 key global markets. Write exactly four extremely detailed, thorough, highly analytical paragraphs:
+    Paragraph 1: Assess Precious & Base Metals - Use the 1M & 6M return percentages supplied to identify structural trend shifts, inflation signals, and macro money flow into safe havens. Provide deep insight.
+    Paragraph 2: Assess the Energy Complex - Dig deeply into the pricing shifts over the last month vs 6 months to extract insights on global supply/demand imbalances, geopolitical risk limits, and global growth.
+    Paragraph 3: Assess the Grains - Build a macro narrative analyzing yield curves, export dynamics, or geopolitical shocks impacting food security. Be highly specific and informative.
+    Paragraph 4: Assess the Soft Commodities - Synthesize specific structural deficits, climate dynamics, or cyclical spikes affecting the softs market. Extrapolate long-term effects.
+    CRITICAL: YOU MUST BE EXTREMELY INFORMATIVE! NO BULLET POINTS. NO LISTS. NO ASTERISKS. Write flowing, professional, in-depth paragraphs."""
 
     user_prompt = f"{prompt_data}\n\nProvide the 4-paragraph commodity macro insight."
 
