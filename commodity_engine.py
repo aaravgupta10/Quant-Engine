@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from google import genai
 import math
+import time
 
 # Force UTF-8 so Windows never crashes
 sys.stdout.reconfigure(encoding='utf-8')
@@ -131,13 +132,24 @@ def run_commodity_analysis():
 
     user_prompt = f"{prompt_data}\n\nProvide the 4-paragraph commodity macro insight."
 
-    response = client.models.generate_content(
-        model='gemini-flash-latest',
-        contents=user_prompt,
-        config=genai.types.GenerateContentConfig(
-            system_instruction=system_prompt,
-        )
-    )
+    max_retries = 3
+    response = None
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model='gemini-flash-latest',
+                contents=user_prompt,
+                config=genai.types.GenerateContentConfig(
+                    system_instruction=system_prompt,
+                )
+            )
+            break
+        except Exception as e:
+            if attempt < max_retries - 1:
+                print(f"[RETRY {attempt+1}/{max_retries}] Gemini API overloaded (503). Waiting 5 seconds before retrying...")
+                time.sleep(5)
+            else:
+                raise e
 
     print("================ COMMODITY MACRO OUTPUT ================\n")
     paras = [p.strip() for p in response.text.split('\n\n') if p.strip()]
