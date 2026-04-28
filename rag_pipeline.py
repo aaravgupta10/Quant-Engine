@@ -52,7 +52,7 @@ def run_rag_pipeline():
 
     # THE FINSHOTS PROMPT OVERRIDE
     system_prompt = """You are a top-tier macroeconomic journalist writing for Finshots. 
-Your job is to read the provided live intelligence and write a highly engaging, continuous, long-form article (MINIMUM 600 WORDS). 
+Your job is to read the provided live intelligence and write a highly engaging, continuous, long-form article (MINIMUM 800 WORDS). 
 Focus on synthesizing the top macroeconomic headlines and explaining exactly how they impact the Indian economy, inflation, and retail investors.
 CRITICAL RULES:
 - ABSOLUTELY NO BULLET POINTS.
@@ -62,7 +62,7 @@ CRITICAL RULES:
 - Ensure your writing is highly varied, non-repetitive, and deeply analytical.
 - Avoid repeating the same points or phrases. Expand on different angles of the provided news."""
 
-    user_prompt = f"Write the 600+ word Finshots-style Macro Article based on this data. Ensure it is detailed, varied, and avoids repetition:\n\nVAULT CONTEXT:\n{retrieved_context}"
+    user_prompt = f"Write the 800+ word Finshots-style Macro Article based on this data. Ensure it is detailed, varied, and avoids repetition:\n\nVAULT CONTEXT:\n{retrieved_context}"
 
     print("5. Synthesizing Final Forecast...\n")
     response = client_ai.models.generate_content(
