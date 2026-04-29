@@ -54,17 +54,17 @@ def get_base_styles():
     return """
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; color: #334155; padding: 20px; }
         .container { background-color: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); max-width: 800px; margin: auto; border: 1px solid #e2e8f0; }
-        h2 { color: #0f172a; border-bottom: 2px solid #2563eb; padding-bottom: 15px; font-size: 28px; margin-bottom: 30px; font-weight: 800; letter-spacing: -0.5px; }
-        h3 { color: #1e3a8a; margin-top: 40px; font-size: 20px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; }
-        .content-block { color: #475569; padding: 5px 15px; border-radius: 8px; font-size: 18px; white-space: pre-wrap; line-height: 1.8; }
-        .section-divider { font-size: 14px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin: 25px 0 10px 0; border-bottom: 1px dashed #e2e8f0; padding-bottom: 5px; }
+        h2 { color: #0f172a; border-bottom: 2px solid #2563eb; padding-bottom: 15px; font-size: 24px; margin-bottom: 30px; font-weight: 800; letter-spacing: -0.5px; }
+        h3 { color: #1e3a8a; margin-top: 40px; font-size: 17px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; }
+        .content-block { color: #475569; padding: 5px 15px; border-radius: 8px; font-size: 15px; white-space: pre-wrap; line-height: 1.8; }
+        .section-divider { font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; margin: 25px 0 10px 0; border-bottom: 1px dashed #e2e8f0; padding-bottom: 5px; }
         .highlight { color: #0f172a; font-weight: 700; }
         .custom-bullet { margin-left: 15px; margin-bottom: 6px; position: relative; display: block; }
-        .custom-bullet::before { content: "■"; color: #3b82f6; font-size: 14px; position: absolute; left: -18px; top: 3px; }
-        .bullish { color: #15803d; font-weight: 700; background: #dcfce7; padding: 4px 10px; border-radius: 4px; border: 1px solid #bbf7d0; font-size: 14px; }
-        .bearish { color: #b91c1c; font-weight: 700; background: #fee2e2; padding: 4px 10px; border-radius: 4px; border: 1px solid #fecaca; font-size: 14px; }
-        .neutral { color: #475569; font-weight: 700; background: #f1f5f9; padding: 4px 10px; border-radius: 4px; border: 1px solid #e2e8f0; font-size: 14px; }
-        .footer { margin-top: 50px; font-size: 14px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px; }
+        .custom-bullet::before { content: "■"; color: #3b82f6; font-size: 12px; position: absolute; left: -18px; top: 3px; }
+        .bullish { color: #15803d; font-weight: 700; background: #dcfce7; padding: 4px 10px; border-radius: 4px; border: 1px solid #bbf7d0; font-size: 12px; }
+        .bearish { color: #b91c1c; font-weight: 700; background: #fee2e2; padding: 4px 10px; border-radius: 4px; border: 1px solid #fecaca; font-size: 12px; }
+        .neutral { color: #475569; font-weight: 700; background: #f1f5f9; padding: 4px 10px; border-radius: 4px; border: 1px solid #e2e8f0; font-size: 12px; }
+        .footer { margin-top: 50px; font-size: 12px; color: #94a3b8; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 20px; }
     """
 
 def get_image_tag(filename, cid):
@@ -104,7 +104,7 @@ def compile_and_send_brief():
             <head><style>{get_base_styles()}</style></head>
             <body>
                 <div class="container">
-                    <h2>Quantitative Commodity Brief <span style="color: #94a3b8; font-weight: 400; font-size: 22px;">| {today_date}</span></h2>
+                    <h2>Quantitative Commodity Brief <span style="color: #94a3b8; font-weight: 400; font-size: 19px;">| {today_date}</span></h2>
                     
                     <h3>Global Macro Commodities Insight</h3>
                     <div class="content-block">{commodity_insights}</div>
@@ -154,7 +154,7 @@ def compile_and_send_brief():
             <head><style>{get_base_styles()}</style></head>
             <body>
                 <div class="container">
-                    <h2>Quantitative Executive Brief <span style="color: #94a3b8; font-weight: 400; font-size: 22px;">| {today_date}</span></h2>
+                    <h2>Quantitative Executive Brief <span style="color: #94a3b8; font-weight: 400; font-size: 19px;">| {today_date}</span></h2>
                     
                     <h3>1. Global Macro & Systemic Risk</h3>
                     <div class="content-block">{macro_intel}</div>

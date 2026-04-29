@@ -42,7 +42,7 @@ def run_rag_pipeline():
 
     print("4. Vault loaded. Formulating query for the Chief Strategist...\n")
     
-    question = "Synthesize the top 3 macroeconomic headlines from today and analyze their impact on the Indian economy."
+    question = "Identify a major recent macroeconomic event, policy shift, or structural change to dive deep into its history, goals, numbers, and reasoning."
     print(f"USER QUERY: {question}\n")
 
     q_resp = client_ai.models.embed_content(model="gemini-embedding-001", contents=question)
@@ -51,18 +51,19 @@ def run_rag_pipeline():
     retrieved_context = "\n\n".join(results['documents'][0])
 
     # THE FINSHOTS PROMPT OVERRIDE
-    system_prompt = """You are a top-tier macroeconomic journalist writing for Finshots. 
-Your job is to read the provided live intelligence and write a highly engaging, continuous, long-form article (MINIMUM 800 WORDS). 
-Focus on synthesizing the top macroeconomic headlines and explaining exactly how they impact the Indian economy, inflation, and retail investors.
+    system_prompt = """You are a top-tier macroeconomic journalist writing for Finshots.
+Your job is to write a highly engaging, continuous, long-form article (MINIMUM 800 WORDS).
+Instead of a generic macro overview, you must pick ONE specific macroeconomic event (either a recent event from the provided live intelligence, or an old, highly relevant historical event) and dive extremely deep into it.
+Decode exactly how it came into existence, the specific goals it had, the exact numbers that were achieved, and the detailed reasoning behind its performance, numbers, and policies.
 CRITICAL RULES:
 - ABSOLUTELY NO BULLET POINTS.
 - ABSOLUTELY NO LISTS.
 - DO NOT USE ASTERISKS.
 - Write in flowing, cohesive paragraphs. Tell a story with the data.
 - Ensure your writing is highly varied, non-repetitive, and deeply analytical.
-- Avoid repeating the same points or phrases. Expand on different angles of the provided news."""
+- Avoid repeating the same points or phrases. Provide a deep-dive analysis of a single event."""
 
-    user_prompt = f"Write the 800+ word Finshots-style Macro Article based on this data. Ensure it is detailed, varied, and avoids repetition:\n\nVAULT CONTEXT:\n{retrieved_context}"
+    user_prompt = f"Write the 800+ word deep-dive Finshots-style Macro Article on a specific event (using the provided context if a recent event stands out, or a relevant historical event). Detail its origins, goals, exact numbers, and policy reasoning:\n\nVAULT CONTEXT:\n{retrieved_context}"
 
     print("5. Synthesizing Final Forecast...\n")
     response = client_ai.models.generate_content(
